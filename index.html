@@ -7,7 +7,12 @@
   </head>
 
   <body>
+    
     <div class="container">
+      <div id="loading" class="loading" style="display: none">
+        <div id="loading-text" class="loading-text">Идет загрузка данных...</div>
+        <div id="spinner" class="spinner"></div>
+      </div>
       <ul class="comments" id="list">        
       </ul>
 
@@ -36,24 +41,6 @@
   </body>
 
   <script>
-
-    /**
-    let commentDatas = [
-          {
-            name: "Глеб Фокин",
-            date: '13.02.22 19:22',
-            text: "Это будет первый комментарий на этой странице",
-            likes: 3,
-            isLiked: false
-          },
-          {
-            name: "Варвара Н.",
-            date: '13.02.22 19:22',
-            text: "Мне нравится как оформлена эта страница! ❤",
-            likes: 75,
-            isLiked: true
-          }
-    ];*/
   
     let commentDatas = [];     
     
@@ -70,40 +57,29 @@
         return appComments;
     };
     
-    const getResponse = () => {
+    const fetchAndRenderComments = () => {
+      loading.style.display = "block";
       // GET - запрос
-      const serverGetPromise = fetch("https://wedev-api.sky.pro/api/v1/nurasyl-tyulegenov/comments",{
+      return fetch("https://wedev-api.sky.pro/api/v1/nurasyl-tyulegenov/comments",{
         method: "GET"
-      });
-      serverGetPromise.then((response) => {
-        const jsonGetPromise = response.json();       
-        jsonGetPromise.then((responseData) => {
+      }).then((response) => {
+        response.json().then((responseData) => {
             commentDatas = formattedComments(responseData);
-            renderComments();        
+            renderComments();  
+            loading.style.display = "none";      
           });
       });
     }
-
-    const postQwery = () => {
-      // POST - запрос
-      const serverPostPromise = fetch("https://wedev-api.sky.pro/api/v1/nurasyl-tyulegenov/comments",{
-        method: "POST",
-        body: JSON.stringify({
-          text: commentInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
-          name: nameInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-        }),
-      });
-      getResponse();
-    }
-
-    getResponse();
-
 
     const buttonElementAdd = document.getElementById("add-form-button");
     const buttonElementDelete = document.getElementById("delete-comment-button");
     const listElement = document.getElementById("list");
     const nameInputElement = document.getElementById("name_input");
     const commentInputElement = document.getElementById("comment_textarea");
+    const loading = document.getElementById("loading");
+
+    fetchAndRenderComments();
+    
     
     // листенер
     buttonElementAdd.addEventListener("click", () => {
@@ -112,18 +88,25 @@
         commentInputElement.style.backgroundColor = "red";
         return;
       }
-      postQwery();
-
-      /**
-      let date = getFormatetNowDate();
-      commentDatas.push({
-        name: nameInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
-        date: date,
-        text: commentInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
-        likes: 0,
-        isLiked: false
-      });*/
-
+      buttonElementAdd.disabled = true;
+      buttonElementAdd.textContent = 'Добавление ...';
+      fetch("https://wedev-api.sky.pro/api/v1/nurasyl-tyulegenov/comments",{
+        method: "POST",
+        body: JSON.stringify({
+          text: commentInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
+          name: nameInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+        }),
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then(() => {
+          return fetchAndRenderComments();
+        })
+        .then(() => {
+          buttonElementAdd.disabled = false;
+          buttonElementAdd.textContent = 'Написать';
+        });
       nameInputElement.value = '';
       commentInputElement.value = '';
       renderComments();
@@ -169,7 +152,7 @@
     }
 
     // рендер функция
-    const renderComments = () => {      
+    const renderComments = () => {   
       const commentHtml = commentDatas.map((commentData, index) => {
         const likes = getStyleLikeButton(commentData.isLiked);
         return `<li class="comment" data-name="${commentData.name}" data-text="${commentData.text}">
@@ -189,9 +172,9 @@
             </div>
           </div>
         </li>`
-      }).join("");
-      listElement.innerHTML = commentHtml;
-      initListeners();
+        }).join("");
+        listElement.innerHTML = commentHtml;
+        initListeners();
     }     
          
     // приватные функции
