@@ -7,65 +7,204 @@
   </head>
 
   <body>
+    
     <div class="container">
-      <ul class="comments">
-        <li class="comment">
-          <div class="comment-header">
-            <div>Глеб Фокин</div>
-            <div>12.02.22 12:18</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Это будет первый комментарий на этой странице
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">3</span>
-              <button class="like-button"></button>
-            </div>
-          </div>
-        </li>
-        <li class="comment">
-          <div class="comment-header">
-            <div>Варвара Н.</div>
-            <div>13.02.22 19:22</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Мне нравится как оформлена эта страница! ❤
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">75</span>
-              <button class="like-button -active-like"></button>
-            </div>
-          </div>
-        </li>
+      <div id="loading" class="loading" style="display: none">
+        <div id="loading-text" class="loading-text">Идет загрузка данных...</div>
+        <div id="spinner" class="spinner"></div>
+      </div>
+      <ul class="comments" id="list">        
       </ul>
+
       <div class="add-form">
         <input
           type="text"
           class="add-form-name"
           placeholder="Введите ваше имя"
+          id="name_input"
         />
         <textarea
           type="textarea"
           class="add-form-text"
           placeholder="Введите ваш коментарий"
           rows="4"
+          id="comment_textarea"
         ></textarea>
         <div class="add-form-row">
-          <button class="add-form-button">Написать</button>
+          <button class="add-form-button" id="add-form-button">Написать</button>
+        </div>
+        <div class="add-form-row">
+          <button class="add-form-button" id="delete-comment-button">Удалить последний комментарий</button>
         </div>
       </div>
     </div>
   </body>
 
   <script>
-    "use strict";
-    // Код писать здесь
-    console.log("It works!");
+  
+    let commentDatas = [];     
+    
+    const formattedComments = (responseData) => {
+      const appComments = responseData.comments.map((comment) => {
+            return {
+              name: comment.author.name,
+              date: getFormatetDate(new Date(comment.date)),
+              text: comment.text,
+              likes: comment.likes,
+              isLiked: false
+            };
+          });
+        return appComments;
+    };
+    
+    const fetchAndRenderComments = () => {
+      loading.style.display = "block";
+      // GET - запрос
+      return fetch("https://wedev-api.sky.pro/api/v1/nurasyl-tyulegenov/comments",{
+        method: "GET"
+      }).then((response) => {
+        response.json().then((responseData) => {
+            commentDatas = formattedComments(responseData);
+            renderComments();  
+            loading.style.display = "none";      
+          });
+      });
+    }
+
+    const buttonElementAdd = document.getElementById("add-form-button");
+    const buttonElementDelete = document.getElementById("delete-comment-button");
+    const listElement = document.getElementById("list");
+    const nameInputElement = document.getElementById("name_input");
+    const commentInputElement = document.getElementById("comment_textarea");
+    const loading = document.getElementById("loading");
+
+    fetchAndRenderComments();
+    
+    
+    // листенер
+    buttonElementAdd.addEventListener("click", () => {
+      if(checkTextByNull(nameInputElement.value) === false || checkTextByNull(commentInputElement.value) === false){
+        nameInputElement.style.backgroundColor = "red";
+        commentInputElement.style.backgroundColor = "red";
+        return;
+      }
+      buttonElementAdd.disabled = true;
+      buttonElementAdd.textContent = 'Добавление ...';
+      fetch("https://wedev-api.sky.pro/api/v1/nurasyl-tyulegenov/comments",{
+        method: "POST",
+        body: JSON.stringify({
+          text: commentInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
+          name: nameInputElement.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+        }),
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then(() => {
+          return fetchAndRenderComments();
+        })
+        .then(() => {
+          buttonElementAdd.disabled = false;
+          buttonElementAdd.textContent = 'Написать';
+        });
+      nameInputElement.value = '';
+      commentInputElement.value = '';
+      renderComments();
+    });
+
+    // листенер
+    buttonElementDelete.addEventListener("click", () => {
+      commentDatas.splice(commentDatas.length - 1, 1);
+      renderComments();
+    });
+
+    // листенер 
+    const initListeners = () => {
+      const likeButtonElements = document.querySelectorAll(".like-button");
+      for(const likeButtonElement of likeButtonElements){
+        likeButtonElement.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const index = likeButtonElement.dataset.index;
+          if(commentDatas[index].isLiked === true){
+            commentDatas[index].isLiked = false;
+            commentDatas[index].likes -= 1;
+          } else {
+            commentDatas[index].isLiked = true;
+            commentDatas[index].likes += 1;
+          }
+          renderComments();
+        });
+      }
+      const commentsElements = document.querySelectorAll(".comment");
+      for(const commentElement of commentsElements){
+        commentElement.addEventListener("click", () => {
+          const comment = commentElement.dataset.text;
+          const name = commentElement.dataset.name;
+          commentInputElement.value = "> "  + comment + "\n" + name + ", ";
+        });
+      }
+      nameInputElement.addEventListener("click", () => {
+        nameInputElement.style.backgroundColor = "";
+      });
+      commentInputElement.addEventListener("click", () => {
+        commentInputElement.style.backgroundColor = "";
+      });
+    }
+
+    // рендер функция
+    const renderComments = () => {   
+      const commentHtml = commentDatas.map((commentData, index) => {
+        const likes = getStyleLikeButton(commentData.isLiked);
+        return `<li class="comment" data-name="${commentData.name}" data-text="${commentData.text}">
+          <div class="comment-header">
+            <div>${commentData.name}</div>
+            <div>${commentData.date}</div>
+          </div>
+          <div class="comment-body">
+            <div class="comment-text">
+              ${commentData.text}
+            </div>
+          </div>
+          <div class="comment-footer">
+            <div class="likes">
+              <span class="likes-counter">${commentData.likes}</span>
+              <button data-index="${index}" class="like-button${likes}"></button>
+            </div>
+          </div>
+        </li>`
+        }).join("");
+        listElement.innerHTML = commentHtml;
+        initListeners();
+    }     
+         
+    // приватные функции
+    
+    const getFormatetNowDate = () => {
+      let date = new Date();
+      return getFormatetDate(date);
+    };
+    const getFormatetDate = (date) => {
+      let options = { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' };
+      let formattedDate = new Intl.DateTimeFormat('ru', options).format(date).replaceAll(",", "");
+      return formattedDate;
+    };
+    const getStyleLikeButton = (likeStatus) => {
+      if(likeStatus === false){
+        return "";
+      } else {
+        return " -active-like";
+      }
+    };
+    const checkTextByNull = (text) => {
+      if(text === "" || text.replaceAll(" ", "") === ""){
+        return false;
+      } else {
+        return true;
+      }
+    };
+
+    // рендер
+    renderComments(); 
+
   </script>
 </html>
