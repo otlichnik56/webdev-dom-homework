@@ -62,18 +62,25 @@
       // GET - запрос
       return fetch("https://wedev-api.sky.pro/api/v1/nurasyl-tyulegenov/comments",{
         method: "GET"
-      })
+      })            
       .catch((error) => {
-            buttonElementAdd.disabled = false;
-            buttonElementAdd.textContent = 'Написать';
-            throw new Error("Нет подключения к сети интернет");
+        throw new Error("Нет подключения к сети интернет");
+        loading.style.display = "none";
       })
       .then((response) => {
-        response.json().then((responseData) => {
+        if(response.status === 200){
+          response.json().then((responseData) => {
             commentDatas = formattedComments(responseData);
             renderComments();  
             loading.style.display = "none";      
           });
+        } else if(response.status === 500){
+            throw new Error("500. Ошибка сервера");
+        }   
+      })
+      .catch((error) => {
+        loading.style.display = "none";
+        alert(error);    
       });
     }
 
@@ -113,7 +120,7 @@
           if(response.status === 201){
             return response.json();
           } else if(response.status === 400){
-            throw new Error("400. Не валидный запрос");
+            throw new Error("400. Слишком короткое имя или комментарий. Введите более 2-х символов");
           } else if(response.status === 500){
             throw new Error("500. Ошибка сервера");
           }       
