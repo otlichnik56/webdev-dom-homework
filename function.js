@@ -1,3 +1,5 @@
+// import { format } from "date-fns";
+// import {format} from './node_modules/date-fns/format.js';
 // приватные функции
 
 const getFormatetNowDate = () => {
@@ -6,8 +8,10 @@ const getFormatetNowDate = () => {
 };
 
 const getFormatetDate = (date) => {
-    let options = { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' };
-    let formattedDate = new Intl.DateTimeFormat('ru', options).format(date).replaceAll(",", "");
+    //let options = { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' };
+    //let formattedDate = new Intl.DateTimeFormat('ru', options).format(date).replaceAll(",", "");
+    //console.log(date);
+    const formattedDate = dateFns.format(date, 'YYYY-MM-DD hh.mm.ss');    
     return formattedDate;
 };
 
@@ -31,7 +35,7 @@ const formattedComments = (responseData) => {
   const appComments = responseData.comments.map((comment) => {
         return {
           name: comment.author.name,
-          date: getFormatetDate(new Date(comment.date)),
+          date: getFormatetDate(comment.date),
           text: comment.text,
           likes: comment.likes,
           isLiked: false

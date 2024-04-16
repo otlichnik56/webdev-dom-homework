@@ -100,7 +100,7 @@ const renderLogin = () => {
             id="username_input1"
           />
       <input
-            type="text"
+            type="password"
             class="add-form-text"
             placeholder="Введите пароль"
         rows="4"
@@ -128,7 +128,7 @@ const renderLogin = () => {
             id="name_input2"
           />
       <input
-            type="text"
+            type="password"
             class="add-form-text"
             placeholder="Введите пароль"
             rows="4"

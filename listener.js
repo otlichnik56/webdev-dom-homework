@@ -3,13 +3,6 @@ import { fetchAndRenderComments, postComment, loginUser, regUser, setToken, setN
 import { checkTextByNull } from './function.js';
 
 
-/**
-buttonElementDelete.addEventListener("click", () => {
-  commentDatas.splice(commentDatas.length - 1, 1);
-  renderComments(commentDatas, listElement);
-});*/
-
-
 const loginListener = (loginHref) => {
   loginHref.addEventListener("click", () => {
     renderLogin();

@@ -21,6 +21,7 @@ export const setName = (newName) => {
 
 function fetchAndRenderComments() {
   renderLoader();
+  //console.log("111");
   return getComments().catch(() => {
     throw new Error("Нет подключения к сети интернет");
   })
