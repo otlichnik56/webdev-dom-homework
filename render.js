@@ -69,14 +69,21 @@ const renderComments = (commentDatas) => {
     const nameInput = document.getElementById("name_input");
     const loginElement = document.getElementById("login");
     const addFormElement = document.getElementById("add-form");
+    const likeButtonElements = document.querySelectorAll(".like-button");
     if (token !== undefined && token !== null){
       addFormElement.style.display = "flex"; 
       loginElement.style.display = "none";
       nameInput.value = name;
-      nameInput.disabled = true;
+      nameInput.disabled = true;      
+      for(const likeButtonElement of likeButtonElements){
+        likeButtonElement.disabled = false;
+      }   
     } else{
       addFormElement.style.display = "none"; 
       loginElement.style.display = "flex";
+      for(const likeButtonElement of likeButtonElements){
+        likeButtonElement.disabled = true;
+      } 
     }
     const loginHref = document.getElementById("login-href"); 
     loginListener(loginHref);

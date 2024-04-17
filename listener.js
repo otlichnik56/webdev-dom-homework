@@ -71,6 +71,8 @@ const initListeners = (commentDatas) => {
     likeButtonElement.addEventListener("click", (event) => {
       event.stopPropagation();
       const index = likeButtonElement.dataset.index;
+      //console.log(index);
+      //console.log(commentDatas[index]);
       if(commentDatas[index].isLiked === true){
         commentDatas[index].isLiked = false;
         commentDatas[index].likes -= 1;
@@ -78,8 +80,9 @@ const initListeners = (commentDatas) => {
         commentDatas[index].isLiked = true;
         commentDatas[index].likes += 1;
       }
+      //console.log(commentDatas[index]);
       renderComments(commentDatas);
-      initListeners();
+      //initListeners();
     });
   }
   const commentsElements = document.querySelectorAll(".comment");
